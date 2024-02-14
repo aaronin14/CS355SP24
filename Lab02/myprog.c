@@ -16,8 +16,6 @@ void printArg(char *str) {
 }
 
 int main(int ac, char *av[]) {
-  if (ac == 1)
-    printf("Usage: myprog <argument1> <argument2> ...");
   for (int i = 1; i < ac; i++) {
     printArg(av[i]);
   }
