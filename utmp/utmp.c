@@ -9,6 +9,7 @@ int main() {
   struct utmp currentRecord;
   int intUTMPlength = sizeof(currentRecord);
   intUTMPfile = open(UTMP_FILE, O_RDONLY);
+
   while (read(intUTMPfile, &currentRecord, intUTMPlength) == intUTMPlength)
     printf("%s %s.\n", currentRecord.ut_user, currentRecord.ut_host);
   close(intUTMPfile);
