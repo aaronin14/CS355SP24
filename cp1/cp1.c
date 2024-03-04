@@ -64,13 +64,18 @@ int main(int ac, char *av[]) {
             return 1;
         }
     }
-
+    
+    // what if, although the source file was succesfully open,
+    // it was not possible to read from it
     if (numbytes<0) {
         perror("Read error");
         return 1;
     }
 
-    close(src);
-    close(dst);
+    // attepmt to close both files
+    if (close(src)<0 || close(dst)<0) {
+        perror("Error closing files");
+        return 1;
+    }
     return 0;
 }
