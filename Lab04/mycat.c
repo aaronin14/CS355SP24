@@ -6,7 +6,7 @@
 
 int do_cat(char *file_name) {
     int file_ptr;
-    int buffer[BUFFERSIZE];
+    char buffer[BUFFERSIZE];
     int numbytes;
 
     file_ptr = open(file_name, O_RDONLY);
@@ -14,9 +14,21 @@ int do_cat(char *file_name) {
         perror(file_name);
         return 1;
     }
+
     while ((numbytes = read(file_ptr, buffer, BUFFERSIZE)) > 0) {
+        printf("%s", buffer);
     }            
-    return 1;
+   
+    if (numbytes<0) {
+        perror("Read error");
+        return 1;
+    }
+
+    if (close(file_ptr)<0) {
+        perror("Error closing files\n");
+        return 1;
+    }
+    return 0;
 }
 
 int flagB=0, flagE=0, flagN=0, flagS=0;
@@ -38,6 +50,7 @@ int main(int ac, char *av[]) {
                 printf("s");
                 break;
             default:
+                do_cat(av[1]);
                 break;
         }
     }
