@@ -31,6 +31,6 @@ void do_ls(char *dir_name){
 }
 
 int main() {
-    do_ls(".");                     // list the contens of the current directory
+    do_ls(".");                     // list the contents of the current directory
     return 0;
 }
