@@ -34,7 +34,7 @@ void show_dir_entry(struct stat *info, char *dir_entry_name) {
     printf("%s\n", dir_entry_name);
 }
 
-void do_stats(char *dir_entry_name) {
+void do_stat(char *dir_entry_name) {
     struct stat info;
     if (stat(dir_entry_name, &info)==-1)
         perror(dir_entry_name);
@@ -53,7 +53,7 @@ void do_ls(char *dir_name){
         perror(dir_name);           // the directory does not exist
     } else {                        // iterate over all directory entries
         while ((dirent_ptr=readdir(dir_ptr))!=0) {
-            do_stats(dirent_ptr->d_name);
+            do_stat(dirent_ptr->d_name);
         }
     closedir(dir_ptr);
     }
