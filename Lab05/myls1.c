@@ -1,53 +1,45 @@
+#include <linux/limits.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <string.h>
-#include <time.h>
 
 int flagA=0, flagR=0, flagS=0;
-#define MaxWords 10
+#define MaxWords 100
 #define MaxWordLength 50
 
-void mode_to_string(int mode, char str[]){
-    strcpy(str, "----------");
-    if (S_ISDIR(mode)) str[0]='d';
-    if (S_ISCHR(mode)) str[0]='c';
-    if (S_ISBLK(mode)) str[0]='b';
-    if (S_ISLNK(mode)) str[0]='l';
-
-    if (mode & S_IRUSR) str[1]='r';
-    if (mode & S_IWUSR) str[2]='w';
-    if (mode & S_IXUSR) str[3]='x';
-
-    if (mode & S_IRGRP) str[4]='r';
-    if (mode & S_IWGRP) str[5]='w';
-    if (mode & S_IXGRP) str[6]='x';
-    
-    if (mode & S_IROTH) str[7]='r';
-    if (mode & S_IROTH) str[8]='w';
-    if (mode & S_IXOTH) str[9]='x';
+int myStringCompare(const void *a, const void *b) {
+    return strcmp((const char*)a,(const char*)b);
 }
 
-void show_dir_entry(struct stat *info, char *dir_entry_name) {
-    char modestring[11];
-    mode_to_string(info->st_mode, modestring);
-    printf("%s ", modestring);
-    printf("%4lu ", info->st_nlink);
-    printf("%8ld ", info->st_size);
-    printf("%.20s ", ctime(&info->st_ctim.tv_sec));
-    printf("%s\n", dir_entry_name);
-}
-void do_stats(char *dir_entry_name) {
-    struct stat info;
-    if (stat(dir_entry_name, &info)==-1)
-        perror(dir_entry_name);
-    else
-        show_dir_entry(&info, dir_entry_name);
+int myStringCompare_reverse(const void *a, const void *b) {
+    return strcmp((const char*)b,(const char*)a);
 }
 
+// sort and print entries based on flags
+void print_ls(char file_names[MaxWords][MaxWordLength], int arr_length) {
+    if(flagS==1) {
+        qsort(file_names, arr_length, MaxWordLength, myStringCompare);
+    }
+    if(flagR==1) {
+        qsort(file_names, arr_length, MaxWordLength, myStringCompare_reverse);
+    }
+    for(int i=0; i<arr_length; i++) {
+        if(flagA==1) {
+            printf("%s\n",file_names[i]);
+        } else {
+            if(file_names[i][0]!='.')
+                printf("%s\n",file_names[i]);
+        }
+    }
+}
+
+// get all entries an store them in file_names array
 void do_ls(char *dir_name) {
+    char file_names[MaxWords][MaxWordLength];
     DIR *dir_ptr;
     struct dirent *dirent_ptr;
     dir_ptr = opendir(dir_name);
@@ -55,14 +47,14 @@ void do_ls(char *dir_name) {
     if (dir_ptr==0) {
         perror(dir_name);
     } else {
-        while ((dirent_ptr=readdir(dir_ptr))!=0) {
-            if (flagA==1)
-                do_stats(dirent_ptr->d_name);
-            else {
-                printf("%s ",dirent_ptr->d_name);
-            }
+        int i=0;
+        while ((dirent_ptr=readdir(dir_ptr))!=0 && i<MaxWords) {
+            strcpy(file_names[i], dirent_ptr->d_name);
+            i++;
         }
-        printf("\n");
+    closedir(dir_ptr);
+
+    print_ls(file_names,i);
     }
 }
 
@@ -81,15 +73,15 @@ int main(int ac, char *av[]) {
                 break;
         }
     }
-    do_ls(".");
+    int count=0;
+    for (int i=1; i<ac; i++) {
+        if (av[i][0] != '-') {
+            count++;
+            do_ls(av[i]);
+        }
+    }
+    if(count==0)
+        do_ls(".");
     
- // char words[MaxWords][MaxWordLength];
- //    for (int i=1; i<ac; i++) {
- //        int j=0;
- //        if (av[i][0] != '-') {
- //            words[j]=av[i];
- //            j++;
- //        }
- //    }
     return 0;
 }
