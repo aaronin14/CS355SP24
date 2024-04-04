@@ -1,4 +1,3 @@
-#include <linux/limits.h>
 #include <stdio.h>
 #include <dirent.h>
 #include <sys/stat.h>
@@ -14,70 +13,54 @@ void add_to_current_path(char *current_path, const char *new_entry) {
 
 void mode_to_string(int mode, char str[]){
     strcpy(str, "0000/----------");
-    int n=0;
-    char char_number='0';
 
-    if(mode & S_ISUID) n+=4;
-    if(mode & S_ISGID) n+=2;
-    if(mode & S_ISVTX) n+=1;
-    char_number+=n;
-    str[0]=char_number;
+    if(mode & S_ISUID) str[0]+=4;
+    if(mode & S_ISGID) str[0]+=2;
+    if(mode & S_ISVTX) str[0]+=1;
 
     if (S_ISDIR(mode)) str[5]='d'; // directory?
     if (S_ISCHR(mode)) str[5]='c'; // terminal?
     if (S_ISBLK(mode)) str[5]='b'; // disk?
     if (S_ISLNK(mode)) str[5]='l'; // link?
 
-    n=0;
-    char_number='0';
     if (mode & S_IRUSR) {
         str[6]='r';
-        n+=4;
+        str[1]+=4;
     }
     if (mode & S_IWUSR) {
         str[7]='w';
-        n+=2;
+        str[1]+=2;
     }
     if (mode & S_IXUSR) {
         str[8]='x';
-        n+=1;
+        str[1]+=1;
     }
-    char_number+=n;
-    str[1]=char_number;
 
-    n=0;
-    char_number='0';
     if (mode & S_IRGRP) {
         str[9]='r'; 
-        n+=4;
+        str[2]+=4;
     }
     if (mode & S_IWGRP) {
         str[10]='w';
-        n+=2;
+        str[2]+=2;
     }
     if (mode & S_IXGRP) {
         str[11]='x';
-        n+=1;
+        str[2]+=1;
     }
-    char_number+=n;
-    str[2]=char_number;
     
-    n=0;
-    char_number='0';
     if (mode & S_IROTH) {
         str[12]='r'; // bits for the others
-        n+=4;
+        str[3]+=4;
     }
     if (mode & S_IROTH) {
         str[13]='w';
-        n+=2;
+        str[3]+=2;
     }
     if (mode & S_IXOTH) {
         str[14]='x';
-        n+=1;
+        str[3]+=1;
     }
-    char_number+=n;
-    str[3]=char_number;
 }
 
 // display stat information for a single file
