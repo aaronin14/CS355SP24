@@ -3,8 +3,6 @@
 #include <unistd.h>
 #include <utmp.h>
 
-void printTime(long *);
-
 int main() {
     struct utmp currentRecord;
     int intUTMPlength = sizeof(currentRecord);
