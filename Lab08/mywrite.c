@@ -3,8 +3,9 @@
 #include <unistd.h>
 #include <string.h>
 #include <utmp.h>
+#include <time.h>
 
-#define BUFSIZE 1024
+#define BUFSIZE 256
 
 int my_strcmp(char *str1, char *str2) {
     return strcmp(str1, str2);
@@ -34,25 +35,37 @@ int main(int ac, char* av[]) {
             return 1;
         }
 
+        // Get current time
+        time_t rawtime;
+        struct tm *timeinfo;
+        time(&rawtime);
+        timeinfo = localtime(&rawtime);
+        char current_time[50];
+        strftime(current_time, 50, "%H:%M", timeinfo);
+
         // Iterating through each utmp record
         while(read(utmp_fd, &utmp_entry, intUTMPlength)==intUTMPlength) {
+            // Get the tty path
             char tty_path[20];
             snprintf(tty_path, sizeof(tty_path), "/dev/%s", utmp_entry.ut_line);
-            if(((my_strcmp(my_username, username)==0 && my_strcmp(my_tty, tty_path)==0)) || strcmp(tty_path, "/dev/pts/0")==0)
+            //printf("%s vs %s\n",tty_path, my_tty);
+
+            // Skip if the tty is the same as current user, or the one that I couldn't access
+            if((strcmp(my_tty, tty_path)==0) || strcmp(tty_path, "/dev/pts/0")==0 || strcmp(tty_path, "/dev/pts/1")==0)
                 continue;
             // Check if the user exists and the record is a user process
             if(utmp_entry.ut_type == USER_PROCESS && my_strcmp(utmp_entry.ut_user, username)==0) {
-                printf("%s - %s | My tty: %s\n", utmp_entry.ut_user, utmp_entry.ut_line, my_tty);
 
-                // Get the tty path and open it
-                
+                //  Open the tty                
                 int tty_fd=open(tty_path, O_WRONLY);   
                 if(tty_fd<0) {
                      continue;
                 } 
                 char buf[BUFSIZE];
-                char hiMessage[]="Message another termimal...\n";
-                char byeMessage[]="EOF";
+                char hiMessage[100] = "";
+                sprintf(hiMessage, "Message from %s@%s on %s at %s...\n", my_username, my_hostname, tty_path, current_time);
+                char byeMessage[]="EOF\n";
+                write(tty_fd, hiMessage, strlen(hiMessage));
                 while(fgets(buf, BUFSIZE, stdin)!=0)    // read a string from the current terminal 
                 	if(write(tty_fd, buf, strlen(buf))==-1) // and write it to the target terminal
                             break;
