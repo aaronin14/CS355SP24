@@ -14,7 +14,7 @@ int main(int ac, char* av[]) {
     if(ac!=2) 
         fprintf(stderr, "Usage: %s username\n", av[0]);
     else {
-	char *username = av[1];
+	    char *username = av[1];
 
         // Open UTMP file to check if username is valid and find the user's tty path
         struct utmp utmp_entry;
@@ -25,32 +25,38 @@ int main(int ac, char* av[]) {
             return 1;
         }
 
+        // get my current info
+        pid_t my_pid = getpid();
+        char *my_username = getlogin();
+
         // Iterating through each utmp record
         while(read(utmp_fd, &utmp_entry, intUTMPlength)==intUTMPlength) {
-
+            if((my_strcmp(my_username, username)==0 && (my_pid==utmp_entry.ut_pid)) || my_strcmp(utmp_entry.ut_line, "pts/0")==0)
+                continue;
             // Check if the user exists and the record is a user process
             if(utmp_entry.ut_type == USER_PROCESS && my_strcmp(utmp_entry.ut_user, username)==0) {
-                printf("%s %d", utmp_entry.ut_user, utmp_entry.ut_type);
+                printf("%s - %s\n", utmp_entry.ut_user, utmp_entry.ut_line);
+                printf("%d - %d\n", my_pid, utmp_entry.ut_pid);
+                printf("%s \n", utmp_entry.ut_user);
 
                 // Get the tty path and open it
-                char tty_path[50];
-                snprintf(tty_path, 50, "/dev/%s", utmp_entry.ut_line);
-                int tty_fd=open(tty_path, O_WRONLY);   
+                //char tty_path[20];
+                //snprintf(tty_path, sizeof(tty_path), "/dev/%s", utmp_entry.ut_line);
+                // int tty_fd=open(tty_path, O_WRONLY);   
 
-                if(tty_fd==-1) {
-                    perror(tty_path);
-                    close(utmp_fd);
-                    return 1;
-
-                } 
-                char buf[BUFSIZE];
-                char hiMessage[]="Message another termimal...\n";
-                char byeMessage[]="EOF";
-                while(fgets(buf, BUFSIZE, stdin)!=0)    // read a string from the current terminal 
-                	if(write(tty_fd, buf, strlen(buf))==-1) // and write it to the target terminal
-                            break;
-                write(tty_fd, byeMessage, strlen(byeMessage));
-                close(tty_fd); 
+                // if(tty_fd<0) {
+                //     continue;
+                // } 
+                // char buf[BUFSIZE];
+                // char hiMessage[]="Message another termimal...\n";
+                // char byeMessage[]="EOF";
+                // while(fgets(buf, BUFSIZE, stdin)!=0)    // read a string from the current terminal 
+                // 	if(write(tty_fd, buf, strlen(buf))==-1) // and write it to the target terminal
+                //             break;
+                // write(tty_fd, byeMessage, strlen(byeMessage));
+                //close(tty_fd); 
+            } else {
+                continue;
             }
         }
         close(utmp_fd);
