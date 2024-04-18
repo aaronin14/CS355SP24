@@ -11,7 +11,7 @@ int prime=2;
 
 void loop() {
     int count=0, i=2; 
-    while (1==1) {
+    while(1) {
         for(int j=1; j<=i; j++)
             if(i%j==0)
                 count++;
