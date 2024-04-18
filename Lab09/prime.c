@@ -1,6 +1,9 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
+#include <termios.h>
+
 
 void quit(int); 
 
@@ -13,30 +16,54 @@ void loop() {
             if(i%j==0)
                 count++;
         
-        if(count==2) {
-            printf("%d\n", prime);
+        if(count==2 && i>prime) {
             prime=i;
         }
         i++;
         count=0;
-        sleep(1);
+        usleep(10000);
     }
 }
 
 int main() {
-    //signal(SIGINT, SIG_IGN); //ignors the interrupt signal
     signal(SIGINT, quit); // reprograms the interrupt signal handler
     loop();
     return 0;
 }
 
 void quit(int signum) {
+    struct termios original_termios, temp_termios;
+
+    // Get current terminal settings
+    if (tcgetattr(STDIN_FILENO, &original_termios) < 0) {
+        perror("tcgetattr");
+        exit(EXIT_FAILURE);
+    }
+
+    // Copy original settings to temporary settings
+    temp_termios = original_termios;
+
+    // Disable canonical mode
+    temp_termios.c_lflag &= ~(ICANON);
+
+    // Set the new terminal settings
+    if (tcsetattr(STDIN_FILENO, TCSANOW, &temp_termios) < 0) {
+        perror("tcsetattr");
+        exit(EXIT_FAILURE);
+    }
+
     char inputChar;
-    printf("%-8d Quit [y/n]? ", prime);
+    printf("\r%-8d Quit [y/n]? ", prime);
     inputChar=getchar();
     if (inputChar=='y') {
+        // Restore original terminal settings
+        if (tcsetattr(STDIN_FILENO, TCSANOW, &original_termios) < 0) {
+            perror("tcsetattr");
+            exit(EXIT_FAILURE);
+        }
         signal(SIGINT, SIG_DFL); // restore the default interrupt signal handler
         raise(SIGINT); // generate an interrupt signal, which kills the process
     }  else
         printf("\n");
 }
+
