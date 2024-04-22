@@ -13,7 +13,7 @@ int main(int ac, char* av[]) {
     if(ac==2)
         speed=atoi(av[1]);      // convert a char* to an int
     initscr();                  // initialize the curses library
-    printf("iThe screen is %d rows by %d columns\n", LINES, COLS);
+    printf("The screen is %d rows by %d columns\n", LINES, COLS);
     getchar();                  // pause the program to wait for a keyboard input
     clear();                    // clear the screen
     for(int i=0; i<LINES; i++) {
