@@ -1,5 +1,7 @@
 #include <curses.h>
 #include <unistd.h>
+#include <signal.h>
+
 
 int direction_x = 1;
 int direction_y = 0;
@@ -11,34 +13,29 @@ int snake_len = 5;
 char border_ch='#';
 char snake_ch='0';
 
-void menu() {
-    mvprintw(0,0,"SNAKE");
-    mvprintw(1,0,"> Play");
-    mvprintw(2,0,"  Quit");
-}
 
-void snake_pit_init(int **holder, int rows, int cols) {
-    for(int y=0; y<rows-1; y++){
-        holder[y][0]=4;
-        holder[y][cols-2]=4;
-    }
-    for(int x=0; x<cols-1; x++){
-        holder[0][x]=4;
-        holder[rows-2][x]=4;
-    }
-    for(int y=1; y<rows-2; y++){
-        for(int x=1; x<cols-2; x++){
+void snake_pit_init(int (*holder)[COLS]) {
+    for(int y=0; y<LINES-1; y++){   // Assign 0 for the whole matrix
+        for(int x=0; x<COLS-1; x++){
             holder[y][x]=0;
         }
     }
+    for(int y=0; y<LINES-1; y++){   // Borders's value is 2
+        holder[y][0]=2;             // Left Border
+        holder[y][COLS-2]=2;        // Right Border
+    }
+    for(int x=0; x<COLS-1; x++){
+        holder[0][x]=2;             // Top Border
+        holder[LINES-2][x]=2;       // Bottom Border
+    }
 }
 
-void print_snake_pit(int **holder, int rows, int cols) {
-    for(int y=0; y<rows-1; y++){
-        for(int x=0; x<cols-1; x++){
-            if(holder[y][x]==4)
+void print_snake_pit(int (*holder)[COLS]) {
+    for(int y=0; y<LINES-1; y++){
+        for(int x=0; x<COLS-1; x++){
+            if(holder[y][x]==2)
                 mvaddch(y,x,border_ch);
-            else
+            if(holder[y][x]==0)
                 mvaddch(y,x,' ');
         }
     }
@@ -46,22 +43,41 @@ void print_snake_pit(int **holder, int rows, int cols) {
 
 
 int main(){
-    int holder[LINES][COLS]; // Snake pit matrix
     timeout(50);
     initscr();
+    int holder[LINES][COLS]; // Snake pit matrix
     refresh();
     noecho();
-    // menu();
-    // getch();
-    snake_pit_init((int **)holder, LINES, COLS);
-    print_snake_pit((int **)holder, LINES, COLS);
-    getch();
+    mvprintw( 0,0,"SNAKE GAME");
+    mvprintw( 1,0,"---------------");
+    mvprintw( 2,0,"- Play 'Enter'");
+    mvprintw( 3,0,"- Exit 'X'");
+    mvprintw( 6,0,"How to play:");
+    mvprintw( 7,0,"- 'W' to move up");
+    mvprintw( 8,0,"- 'A' to move left");
+    mvprintw( 9,0,"- 'S' to move down");
+    mvprintw(10,0,"- 'D' to move right");
+    while(1) {
+        int ch=getch();
+        switch(ch) {
+            case '\n':
+                snake_pit_init(holder);
+                print_snake_pit(holder);
+                getch();
+                break;
+            case 'X':
+            case 'x':
+                endwin();
+                return 0;
+            default:
+                continue;
+        }
+        refresh();
+    }
     endwin();
-
+}
 //     while(1){
 //         if (ch == 'Q' || ch == 'q') {
-//             // turnPoint_x = ;
-//             // turnPoint_y = ;
 //             old_direction_x = direction_x;
 //             old_direction_y = direction_y;
 //             direction_y = 0;
@@ -98,4 +114,3 @@ int main(){
 //         }
 //
 //     }
-}
