@@ -19,7 +19,7 @@ int main(int ac, char *av[]) {
             printf("Speed is range from 1 to 99\n");
         else
             speed*=(atoi(av[1])/2);
-    } else {
+    } if(ac>2) {
         printf("Usage: %s [speed = 1-99]\n",av[0]);
         return 0;
     }
