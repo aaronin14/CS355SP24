@@ -3,30 +3,28 @@
 #include <signal.h>
 
 
-struct Position {
-    int y,x;
-};
+#define INITIAL_LENGTH 5
+#define SNAKE_MAX_LENGTH 25
 
-// Legendary
-char snake_ch='0';
+// Snake is drawn by character '0'
+char snake_ch = '0';
 // Snake's initial length
-int snake_len = 5;
+int snake_len = INITIAL_LENGTH;
 // Snake's starting head position
-int start_x = 7;
+int start_x = 2+INITIAL_LENGTH;
 int start_y = 2;
 // Snake starting direction
 int direction_x = 1;
 int direction_y = 0;
-// Snake's movement
-struct Position snake[20];
-int head_x, head_y;
-int old_direction_x = 1;
-int old_direction_y = 0;
-int turnPoint_x, turnPoint_y;
+// Snake's position is stored in an array of Postition struct
+struct Position {
+    int y,x;
+};
+struct Position snake[SNAKE_MAX_LENGTH];
 
-// Aaron Nguyen
+
 // Initialize the snake pit, and the snake
-void game_init(int (*holder)[COLS]) {
+void init_game(int (*holder)[COLS]) {
     clear(); // Clear the screen
     // Snake pit
     for(int y=0; y<LINES-1; y++){   // Empty space's value is 0
@@ -41,7 +39,6 @@ void game_init(int (*holder)[COLS]) {
         holder[0][x]=-2;                 // Top Border
         holder[LINES-1][x]=-2;           // Bottom Border
     }
-
     // Snake init
     snake[0].x = start_x;
     snake[0].y = start_y;
@@ -53,7 +50,6 @@ void game_init(int (*holder)[COLS]) {
 }
 
 
-// Aaron Nguyen
 // Printing the whole game
 void print_game(int (*holder)[COLS]) {
     box(stdscr, 0, 0);
@@ -81,12 +77,13 @@ void snake_movement(int (*holder)[COLS]) {
     snake[0].y += direction_y;
     int head_x = snake[0].x;
     int head_y = snake[0].y;
-    holder[head_y][head_x]=-1;
+    holder[head_y][head_x]=-1;          // Assing -1 to the new head position
 }
 
 
 void game(int (*holder)[COLS]) {
     int ch;
+    snake_movement(holder);
     while(1) {
         print_game(holder);
         ch=getch();
@@ -94,43 +91,40 @@ void game(int (*holder)[COLS]) {
             case 'W':
             case 'w':
                 if(direction_y!=1) {
-                    direction_y = -1;
-                    direction_x = 0;
+                    direction_x=0;
+                    direction_y=-1;
                 }
                 break;
             case 'A':
             case 'a':
                 if(direction_x!=1) {
-                    direction_y = 0;
-                    direction_x = -1;
+                    direction_x=-1;
+                    direction_y=0;
                 }
                 break;
             case 'S':
             case 's':
-                if(direction_y!=-1){
-                    direction_y = 1;
-                    direction_x = 0;
+                if(direction_y!=-1) {
+                    direction_x=0;
+                    direction_y=1;
                 }
                 break;
             case 'D':
             case 'd':
                 if(direction_x!=-1) {
-                    direction_y = 0;
-                    direction_x = 1;
+                    direction_x=1;
+                    direction_y=0;
                 }
                 break;
-            case 'P':
-            case 'p':
-                // Should pause the game
-                break;
+            case 'X':
+            case 'x':
+                endwin();
+                raise(SIGINT);
             default:
-                mvprintw(LINES-3,3,"You pressed \"%c\" key ",(char)ch);
-                refresh();
+                break;
         }
         snake_movement(holder);
-        usleep(100000);
     }
-    raise(SIGINT);
 }
 
 
@@ -141,36 +135,31 @@ int main(){
     curs_set(0);
     int holder[LINES][COLS]; // Snake pit
 
-    game_init(holder);
-    game(holder);
-
-    // Aaron Nguyen
     // Game Menu and Control
-//     box(stdscr, 0, 0);
-//     mvprintw( 1,1,"SNAKE GAME");
-//     mvprintw( 2,1,"- Play 'Enter'");
-//     mvprintw( 3,1,"- Exit 'X'");
-//     mvprintw( 6,1,"How to play:");
-//     mvprintw( 7,1,"- 'W' to move up");
-//     mvprintw( 8,1,"- 'A' to move left");
-//     mvprintw( 9,1,"- 'S' to move down");
-//     mvprintw(10,1,"- 'D' to move right");
-//     while(1) {
-//         int ch=getch();
-//         switch(ch) {
-//             case '\n':
-//                 game_init(holder);
-//                 snake_movement(holder);
-//                 getch();
-//                 break;
-//             case 'X':
-//             case 'x':
-//                 endwin();
-//                 return 0;
-//             default:
-//                 continue;
-//         }
-//         refresh();
-//     }
-//     endwin();
+    box(stdscr, 0, 0);
+    mvprintw( 1,1,"SNAKE GAME");
+    mvprintw( 2,1,"- Play 'Enter'");
+    mvprintw( 3,1,"- Exit 'X'");
+    mvprintw( 6,1,"How to play:");
+    mvprintw( 7,1,"- 'W' to move up");
+    mvprintw( 8,1,"- 'A' to move left");
+    mvprintw( 9,1,"- 'S' to move down");
+    mvprintw(10,1,"- 'D' to move right");
+    while(1) {
+        int ch=getch();
+        switch(ch) {
+            case '\n':
+                init_game(holder);
+                game(holder);
+                break;
+            case 'X':
+            case 'x':
+                endwin();
+                return 0;
+            default:
+                continue;
+        }
+        refresh();
+    }
+    endwin();
 }
