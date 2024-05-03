@@ -7,46 +7,52 @@
 
 
 // Richard & Aaron
-#define INITIAL_LENGTH 5
+#define INITIAL_LENGTH 3
 // Trophy
 int trophy_flag;
-int trophy_x;
-int trophy_y;
-int trophy_value = 1;
-int trophy_time;
+int trophy_x=5;
+int trophy_y=10;
+int trophy_value;
+int trophy_timelimit;
 // Snake is drawn by character '0'
 char snake_ch = '0';
-// Snake's initial length
+// Snake's length
 int snake_len = INITIAL_LENGTH;
+int current_snake_len = INITIAL_LENGTH;
+int snake_max_len;
 // Snake's starting head position
 int start_x = 2+INITIAL_LENGTH;
 int start_y = 2;
 // Snake starting direction
 int direction_x = 1;
 int direction_y = 0;
-int old_direction_x = 1;
-int old_direction_y = 0;
 // Snake's position is stored in an array of Postition struct
 struct Position {
     int y,x;
 };
 
+// Aaron
+// Generate random a integer in a range
+int random_number(int min, int max) {
+    return min+rand()%(max-min+1);
+}
+
 // Richard & Aaron
-void trophy_creation(int (*holder)[COLS]){
-    trophy_x = rand() % COLS + 1;
-    trophy_y = rand() % LINES + 1;
-    trophy_value = rand() % 9 + 1;
-    trophy_time = rand() % 9 + 1;
+void create_trophy(int (*holder)[COLS]){
+    trophy_x = random_number(1, COLS-1);
+    trophy_y = random_number(1, LINES-1);
+    trophy_value = random_number(1, 9);
+    trophy_timelimit = random_number(1, 9);
     trophy_flag=1;
     holder[trophy_y][trophy_x] = trophy_value;
-    alarm(trophy_time*10000);
+    alarm(trophy_timelimit*10000);
 }
 
 // Aaron
 // Initialize the snake pit, and the snake
 void init_game(int (*holder)[COLS], struct Position *snake) {
-    clear(); // Clear the screen
-    // Snake pit
+    clear();
+    // Initialize the Snake pit
     for(int y=0; y<LINES-1; y++){   // Empty space's value is 0
         for(int x=0; x<COLS-1; x++)
             holder[y][x]=0;
@@ -59,7 +65,7 @@ void init_game(int (*holder)[COLS], struct Position *snake) {
         holder[0][x]=-2;                 // Top Border
         holder[LINES-1][x]=-2;           // Bottom Border
     }
-    // Snake init
+    // Initialize the Snake
     snake[0].x = start_x;
     snake[0].y = start_y;
     for(int i=0; i<snake_len; i++) {
@@ -67,7 +73,8 @@ void init_game(int (*holder)[COLS], struct Position *snake) {
         snake[i].y=start_y;
         holder[snake[0].y][snake[0].x-i]=-1;    // Snake's value is -1
     }
-    trophy_creation(holder);
+    // Initialize the trophy
+    create_trophy(holder);
 }
 
 // Aaron
@@ -89,53 +96,46 @@ void print_game(int (*holder)[COLS]) {
 
 // Aaron
 // Print the gameover screen
-void print_gameover(char c){
+void print_gameover(char ch){
     clear();
     box(stdscr, 0, 0);
     int menu_x=COLS/2-6;
     int menu_y=LINES/2;
     mvprintw(menu_y,menu_x,"GAMEOVER");
-    if(c=='b')
-        mvprintw(menu_y+1,menu_x,"Run into the border");
-    if(c=='s')
-        mvprintw(menu_y+1,menu_x,"Run into itself");
-    if(c=='r')
-        mvprintw(menu_y+1,menu_x,"Trying to reverse");
-    endwin();
-}
-
-// Richard & Aaron
-// Check if game is over
-void check_collision(int (*holder)[COLS], struct Position *snake) {
-    // Snake hits Right border or Bottom Border
-    if(snake[0].x + direction_x == COLS || snake[0].y + direction_y == LINES) {
-        print_gameover('b');
-        exit(1);
+    switch(ch) {
+        case 'b':
+            mvprintw(menu_y+1,menu_x,"Ran into the border");
+            break;
+        case 's':
+            mvprintw(menu_y+1,menu_x,"Ran into itself");
+            break;
+        case 'r':
+            mvprintw(menu_y+1,menu_x,"Tried to reverse");
+            break;
+        case 'w':
+            mvprintw(menu_y+1,menu_x,"You Won!!!");
+            break;
     }
-    // Snake hits Left border or Top Border
-    if(snake[0].x + direction_x == 0 || snake[0].y + direction_y == 0) {
-        print_gameover('b');
-        exit(1);
-    }
-    // Snake hits itself
-    if(holder[snake[0].y + direction_y][snake[0].x + direction_x] == -1) {
-        print_gameover('s');
-        exit(1);
-    }
-    // Snake reached the trophy
-    if(snake[0].x == trophy_x && snake[0].y == trophy_y) {
-        snake_len += trophy_value;
-        trophy_creation(holder);
+    while(1) {
+        getch();
+        endwin();
+        raise(SIGINT);
     }
 }
 
 // Aaron
-// Updating the snake position
+// Increase snake length or keep it moving
 void update_snake_position(int (*holder)[COLS], struct Position *snake) {
-    int tail_x=snake[snake_len-1].x;
-    int tail_y=snake[snake_len-1].y;
-    // Assign 0 to the previous tail position
-    holder[tail_y][tail_x]=0;
+    if(snake_len < current_snake_len){
+        snake_len++;
+        int tail_x=snake[snake_len-1].x;
+        int tail_y=snake[snake_len-1].y;
+        holder[tail_y][tail_x]=-1;
+    } else {
+        int tail_x=snake[snake_len-1].x;
+        int tail_y=snake[snake_len-1].y;
+        holder[tail_y][tail_x]=0;
+    }
     // Assign snake new position
     for(int i=snake_len-1; i>0; i--) {
         snake[i].x=snake[i-1].x;
@@ -149,18 +149,40 @@ void update_snake_position(int (*holder)[COLS], struct Position *snake) {
     holder[head_y][head_x]=-1;
 }
 
+// Richard
+// Check Collision
+void check_collision(int (*holder)[COLS], struct Position *snake) {
+    // Snake hits Right border or Bottom Border
+    if(snake[0].x + direction_x == COLS || snake[0].y + direction_y == LINES) {
+        print_gameover('b');
+    }
+    // Snake hits Left border or Top Border
+    if(snake[0].x + direction_x == 0 || snake[0].y + direction_y == 0) {
+        print_gameover('b');
+    }
+    // Snake hits itself
+    if(holder[snake[0].y + direction_y][snake[0].x + direction_x] == -1) {
+        print_gameover('s');
+    }
+    // Snake reached the trophy
+    if(snake[0].x == trophy_x && snake[0].y == trophy_y) {
+        current_snake_len += trophy_value;
+        create_trophy(holder);
+        if(current_snake_len>=snake_max_len)
+            print_gameover('w');
+    }
+    update_snake_position(holder, snake);
+}
 
+
+// Richard
+//
 void game(int (*holder)[COLS], struct Position *snake) {
     int ch;
-    update_snake_position(holder, snake);
-    int speed;
-    //Richard
+    int delay_speed;
     while(1) {
-        trophy_creation(holder);
-        speed = 700 / snake_len;
-        timeout(speed);
-        direction_x = old_direction_x;
-        direction_y = old_direction_y;
+        delay_speed = 700 / (current_snake_len);
+        timeout(delay_speed);
         print_game(holder);
         ch=getch();
         switch(ch) {
@@ -172,8 +194,6 @@ void game(int (*holder)[COLS], struct Position *snake) {
                 else {
                     direction_x=0;
                     direction_y=-1;
-                    old_direction_x = direction_x;
-                    old_direction_y = direction_y;
                 }
                 break;
             case KEY_LEFT:
@@ -184,8 +204,6 @@ void game(int (*holder)[COLS], struct Position *snake) {
                 else {
                     direction_x=-1;
                     direction_y=0;
-                    old_direction_x = direction_x;
-                    old_direction_y = direction_y;
                 }
                 break;
             case KEY_DOWN:
@@ -196,8 +214,6 @@ void game(int (*holder)[COLS], struct Position *snake) {
                 else {
                     direction_x=0;
                     direction_y=1;
-                    old_direction_x = direction_x;
-                    old_direction_y = direction_y;
                 }
                 break;
             case KEY_RIGHT:
@@ -208,8 +224,6 @@ void game(int (*holder)[COLS], struct Position *snake) {
                 else {
                     direction_x=1;
                     direction_y=0;
-                    old_direction_x = direction_x;
-                    old_direction_y = direction_y;
                 }
                 break;
             case 'X':
@@ -220,24 +234,23 @@ void game(int (*holder)[COLS], struct Position *snake) {
                 break;
         }
         check_collision(holder, snake);
-        update_snake_position(holder, snake);
     }
 }
 
 
+// Aaron
 int main(){
     initscr();
     clear();
     noecho();
     curs_set(0);
     keypad(stdscr, TRUE);
-    // Aaron
     // Initialize the Snake pit
     int holder[LINES][COLS];
     // Snake Max Length / Half of the terminal Perimeter
-    int max_length=LINES+COLS;
+    snake_max_len=(LINES+COLS)/2;
     // Initialize Snake Position
-    struct Position snake[max_length];
+    struct Position snake[snake_max_len];
     // Game Menu and Control
     box(stdscr, 0, 0);
     int menu_x=COLS/2-8;
@@ -251,7 +264,6 @@ int main(){
     mvprintw(menu_y+ 9,menu_x-8,"'S' or 'DOWN-ARROW' to move down");
     mvprintw(menu_y+10,menu_x-8,"'D' or 'RIGHT-ARROW' to move right");
 
-    
     while(1) {
         trophy_flag=0;
         int ch=getch();
