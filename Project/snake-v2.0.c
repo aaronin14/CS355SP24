@@ -37,11 +37,11 @@ int random_number(int min, int max) {
 // Richard
 // Create trophy
 void create_trophy(int (*holder)[COLS]){
-    trophy_x = random_number(1, COLS-1);
-    trophy_y = random_number(1, LINES-1);
+    trophy_x = random_number(1, COLS-2);
+    trophy_y = random_number(1, LINES-2);
     while(holder[trophy_y][trophy_x]!=0){
         trophy_x = random_number(2, COLS-2);
-        trophy_y = random_number(2, LINES-2);  
+        trophy_y = random_number(2, LINES-2);
     }
     trophy_value = random_number(1, 9);
     trophy_timer = random_number(1, 9) * 1000;
@@ -51,7 +51,7 @@ void create_trophy(int (*holder)[COLS]){
 // Aaron
 // Remove trophy
 void remove_trophy(int (*holder)[COLS]){
-    holder[trophy_y][trophy_x]=0;
+    //holder[trophy_y][trophy_x]=0;
 }
 
 // Aaron
@@ -84,41 +84,29 @@ void init_game(int (*holder)[COLS], struct Position *snake) {
         case 0:
             direction_x=1;
             direction_y=0;
-            for(int i=0; i<snake_len; i++) {
-                snake[i].x=start_x-i;
-                snake[i].y=start_y;
-                holder[snake[0].y][snake[0].x-i]=-1;    
-            }
             break;
         case 1:
             direction_x=-1;
             direction_y=0;
-            for(int i=0; i<snake_len; i++) {
-            snake[i].x=start_x+i;
-            snake[i].y=start_y;
-            holder[snake[0].y][snake[0].x+i]=-1;    
-        }
             break;
         case 2:
             direction_x=0;
             direction_y=1;
-            for(int i=0; i<snake_len; i++) {
-            snake[i].x=start_x;
-            snake[i].y=start_y-i;
-            holder[snake[0].y-i][snake[0].x]=-1;
-        }
             break;
         case 3:
             direction_x=0;
             direction_y=-1;
-            for(int i=0; i<snake_len; i++) {
-            snake[i].x=start_x;
-            snake[i].y=start_y+i;
-            holder[snake[0].y+i][snake[0].x]=-1;
-        }
             break;
         default:
             break;
+    }
+    // Assign snake value onto the holder
+    for(int i=0; i<snake_len; i++) {
+        int xs=i*direction_x;
+        int ys=i*direction_y;
+        snake[i].x=start_x-xs;
+        snake[i].y=start_y-ys;
+        holder[snake[0].y-ys][snake[0].x-xs]=-1;
     }
 }
 
