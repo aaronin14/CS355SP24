@@ -32,7 +32,7 @@ struct Position {
 };
 
 // Aaron
-// Generate random a integer in a range
+// Generate random a integer from a range
 int random_number(int min, int max) {
     return min+rand()%(max-min+1);
 }
@@ -102,7 +102,7 @@ void print_game(int (*holder)[COLS]) {
 }
 
 // Aaron
-// Print the gameover screen
+// Print the check_gameover screen
 void print_gameover(char ch){
     clear();
     box(stdscr, 0, 0);
@@ -111,23 +111,22 @@ void print_gameover(char ch){
     mvprintw(menu_y,menu_x,"GAMEOVER");
     switch(ch) {
         case 'b':
-            mvprintw(menu_y+1,menu_x,"Ran into the border");
+            mvprintw(menu_y+1,menu_x-5,"Ran into the border");
             break;
         case 's':
-            mvprintw(menu_y+1,menu_x,"Ran into itself");
+            mvprintw(menu_y+1,menu_x-3,"Ran into itself");
             break;
         case 'r':
-            mvprintw(menu_y+1,menu_x,"Tried to reverse");
+            mvprintw(menu_y+1,menu_x-3,"Tried to reverse");
             break;
         case 'w':
-            mvprintw(menu_y+1,menu_x,"You Won!!!");
+            mvprintw(menu_y+1,menu_x-1,"You Won!!!");
             break;
     }
-    while(1) {
-        getch();
-        endwin();
-        raise(SIGINT);
-    }
+    nodelay(stdscr, FALSE);
+    getch();
+    endwin();
+    raise(SIGINT);
 }
 
 // Aaron
@@ -158,7 +157,7 @@ void update_snake_position(int (*holder)[COLS], struct Position *snake) {
 
 // Richard
 // Gameover logic
-void gameover(int (*holder)[COLS], struct Position *snake) {
+void check_gameover(int (*holder)[COLS], struct Position *snake) {
     // Snake hits Right border or Bottom Border
     if(snake[0].x + direction_x == COLS || snake[0].y + direction_y == LINES) {
         print_gameover('b');
@@ -176,7 +175,8 @@ void gameover(int (*holder)[COLS], struct Position *snake) {
 // Richard
 // Check Collision
 void check_collision(int (*holder)[COLS], struct Position *snake) {
-    gameover(holder, snake);
+    // Check if the game is over
+    check_gameover(holder, snake);
     // Snake reached the trophy
     if(snake[0].x == trophy_x && snake[0].y == trophy_y) {
         current_snake_len += trophy_value;
@@ -194,7 +194,7 @@ void game(int (*holder)[COLS], struct Position *snake) {
     int ch;
     int delay_speed;
     while(1) {
-        delay_speed = 100000 - (current_snake_len*5000);
+        delay_speed = 500000 / (current_snake_len);
         if(trophy_timer<=0) {
             remove_trophy(holder);
             create_trophy(holder);
