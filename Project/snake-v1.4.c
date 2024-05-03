@@ -1,10 +1,9 @@
 #include <curses.h>
-#include <math.h>
 #include <unistd.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <time.h>
 #include <sys/time.h>
-#include <math.h>
 
 
 // Richard
@@ -103,32 +102,6 @@ void print_game(int (*holder)[COLS]) {
 }
 
 // Aaron
-// Increase snake length or keep it moving
-void update_snake_position(int (*holder)[COLS], struct Position *snake) {
-    if(snake_len < current_snake_len){
-        snake_len++;
-        int tail_x=snake[snake_len-1].x;
-        int tail_y=snake[snake_len-1].y;
-        holder[tail_y][tail_x]=-1;
-    } else {
-        int tail_x=snake[snake_len-1].x;
-        int tail_y=snake[snake_len-1].y;
-        holder[tail_y][tail_x]=0;
-    }
-    // Assign snake new position
-    for(int i=snake_len-1; i>0; i--) {
-        snake[i].x=snake[i-1].x;
-        snake[i].y=snake[i-1].y;
-    }
-    // Assign new head position
-    snake[0].x += direction_x;
-    snake[0].y += direction_y;
-    int head_x = snake[0].x;
-    int head_y = snake[0].y;
-    holder[head_y][head_x]=-1;
-}
-
-// Aaron
 // Print the gameover screen
 void print_gameover(char ch){
     clear();
@@ -157,9 +130,35 @@ void print_gameover(char ch){
     }
 }
 
+// Aaron
+// Increase snake length or keep it moving
+void update_snake_position(int (*holder)[COLS], struct Position *snake) {
+    if(snake_len < current_snake_len){
+        snake_len++;
+        int tail_x=snake[snake_len-1].x;
+        int tail_y=snake[snake_len-1].y;
+        holder[tail_y][tail_x]=-1;
+    } else {
+        int tail_x=snake[snake_len-1].x;
+        int tail_y=snake[snake_len-1].y;
+        holder[tail_y][tail_x]=0;
+    }
+    // Assign snake new position
+    for(int i=snake_len-1; i>0; i--) {
+        snake[i].x=snake[i-1].x;
+        snake[i].y=snake[i-1].y;
+    }
+    // Assign new head position
+    snake[0].x += direction_x;
+    snake[0].y += direction_y;
+    int head_x = snake[0].x;
+    int head_y = snake[0].y;
+    holder[head_y][head_x]=-1;
+}
+
 // Richard
 // Gameover logic
-int gameover(int (*holder)[COLS], struct Position *snake) {
+void gameover(int (*holder)[COLS], struct Position *snake) {
     // Snake hits Right border or Bottom Border
     if(snake[0].x + direction_x == COLS || snake[0].y + direction_y == LINES) {
         print_gameover('b');
@@ -172,12 +171,12 @@ int gameover(int (*holder)[COLS], struct Position *snake) {
     if(holder[snake[0].y + direction_y][snake[0].x + direction_x] == -1) {
         print_gameover('s');
     }
-    return 1;
 }
 
 // Richard
 // Check Collision
 void check_collision(int (*holder)[COLS], struct Position *snake) {
+    gameover(holder, snake);
     // Snake reached the trophy
     if(snake[0].x == trophy_x && snake[0].y == trophy_y) {
         current_snake_len += trophy_value;
@@ -195,7 +194,7 @@ void game(int (*holder)[COLS], struct Position *snake) {
     int ch;
     int delay_speed;
     while(1) {
-        delay_speed = 100000 - (trophy_timer*4000);
+        delay_speed = 100000 - (current_snake_len*5000);
         if(trophy_timer<=0) {
             remove_trophy(holder);
             create_trophy(holder);
