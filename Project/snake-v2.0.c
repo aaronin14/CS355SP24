@@ -51,7 +51,7 @@ void create_trophy(int (*holder)[COLS]){
 // Aaron
 // Remove trophy
 void remove_trophy(int (*holder)[COLS]){
-    //holder[trophy_y][trophy_x]=0;
+    holder[trophy_y][trophy_x]=0;
 }
 
 // Aaron
@@ -113,7 +113,6 @@ void init_game(int (*holder)[COLS], struct Position *snake) {
 // Aaron
 // Printing the whole screen
 void print_game(int (*holder)[COLS]) {
-    box(stdscr, 0, 0);
     for(int y=0; y<LINES-1; y++){
         for(int x=0; x<COLS-1; x++){
             if(holder[y][x]==-1)
@@ -124,6 +123,7 @@ void print_game(int (*holder)[COLS]) {
                 mvaddch(y,x,holder[y][x]+'0');
         }
     }
+    box(stdscr, 0, 0);
     refresh();
 }
 
@@ -213,14 +213,25 @@ void check_collision(int (*holder)[COLS], struct Position *snake) {
     update_snake_position(holder, snake);
 }
 
+// Aaron
+// Calculate delay speed
+int calculate_delay_time(){
+    int min_delay_time = 50000;
+    int delay_time = 1000000 / (current_snake_len);
+    if (delay_time<min_delay_time)
+        delay_time=min_delay_time;
+    return delay_time;
+}
 
 // Richard
-//
+// The game
 void game(int (*holder)[COLS], struct Position *snake) {
     int ch;
-    int delay_speed;
+    int delay_time;
     while(1) {
-        delay_speed = 500000 / (current_snake_len);
+        // Adjust the delay speed
+        delay_time=calculate_delay_time();
+
         if(trophy_timer<=0) {
             remove_trophy(holder);
             create_trophy(holder);
@@ -277,24 +288,26 @@ void game(int (*holder)[COLS], struct Position *snake) {
         }
         check_collision(holder, snake);
         print_game(holder);
-        usleep(delay_speed);
-        trophy_timer -=50;
+        usleep(delay_time);
+        trophy_timer-=100;
     }
 }
 
 
 // Aaron
+// Game Menu and initialize the terminal in cursor mode
 int main(){
     initscr();
     clear();
     noecho();
     curs_set(0);
-    nodelay(stdscr, TRUE);
     keypad(stdscr, TRUE);
+    // Enable the non-blocking mode, so it won't wait for getch() user input
+    nodelay(stdscr, TRUE);
     // Initialize the Snake pit
     int holder[LINES][COLS];
-    // Snake Max Length / Half of the terminal Perimeter
-    snake_max_len=(LINES+COLS)/2;
+    // Snake Max Length
+    snake_max_len=LINES+COLS;
     // Initialize Snake Position
     struct Position snake[snake_max_len];
     // Game Menu and Control
