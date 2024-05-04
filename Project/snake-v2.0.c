@@ -206,7 +206,9 @@ void check_collision(int (*holder)[COLS], struct Position *snake) {
     // Snake reached the trophy
     if(snake[0].x == trophy_x && snake[0].y == trophy_y) {
         current_snake_len += trophy_value;
+        // Display winning Screen
         if(current_snake_len>=snake_max_len)
+        //if(current_snake_len>=15)
             print_gameover('w');
         create_trophy(holder);
     }
